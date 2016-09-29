@@ -23,6 +23,10 @@ public class sim_cache {
         /* Enter Validation checks for size and creation */
 
         Cache L1 = new Cache(blocksize, l1Size, l1Assoc, replacementPolicy);
+        Cache L2=null;
+        if(l2Size!=0)
+            L2 = new Cache(blocksize, l2Size, l2Assoc, replacementPolicy );
+
 
     }
 }
