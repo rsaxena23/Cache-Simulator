@@ -4,13 +4,17 @@
 public class Constants {
 
     /* Replacement Policies */
-    int LRU=0;
-    int FIFO=1;
-    int PSEUDO_LRU=2;
-    int OPTIMAL=3;
+    static int LRU=0;
+    static int FIFO=1;
+    static int PSEUDO_LRU=2;
+    static int OPTIMAL=3;
 
     /* L2 Inclusion */
-    int NON_INCLUSIVE = 0;
-    int INCLUSIVE = 1;
-    int EXCLUSIVE =2;
+    static int NON_INCLUSIVE = 0;
+    static int INCLUSIVE = 1;
+    static int EXCLUSIVE =2;
+
+    /*General*/
+    static int NO=-1;
+    static int YES=0;
 }

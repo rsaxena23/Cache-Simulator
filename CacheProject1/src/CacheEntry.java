@@ -3,5 +3,6 @@
  */
 public class CacheEntry {
     String loadedAddress = null;
+    String completeAddress = null;
     boolean isDirty = false;
 }
