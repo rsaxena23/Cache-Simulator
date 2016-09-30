@@ -7,8 +7,10 @@ public class ReplacementSet {
     int[][] replData;
     int replacementPolicy;
     int systemTimer=0;
+    int ways;
     public ReplacementSet(int replacementPolicy,int noOfSets,int associativity)
     {
+        this.ways = associativity;
         this.replacementPolicy=replacementPolicy;
         if(replacementPolicy == Constants.LRU)
             replData = new int[noOfSets][associativity];
@@ -18,13 +20,12 @@ public class ReplacementSet {
     }
     public int getReplaceIndex(int index)
     {
-        int i;
         /* LRU Case*/
         if(replacementPolicy== Constants.LRU)
         {
             int min = replData[index][0];
             int replace_index=0;
-            for(i=1;i<replData[index].length;i++) {
+            for(int i=1;i<replData[index].length;i++) {
                 if (replData[index][i] < min) {
                     min = replData[index][i];
                     replace_index=i;
@@ -36,10 +37,16 @@ public class ReplacementSet {
 
         /* FIFO Case */
         else if(replacementPolicy==Constants.FIFO) {
-            return replData[index][0]++;
+
+            return replData[index][0]++%ways;
         }
 
         /*Pseudo LRU Case */
         return -1;
+    }
+    public void updateIndex(int index, int way)
+    {
+        if(replacementPolicy==Constants.LRU)
+            replData[index][way]= ++systemTimer;
     }
 }
