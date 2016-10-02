@@ -74,7 +74,7 @@ public class ReplacementSet {
                 replData[index][ (ways/2) + (way/2)  ] = 1;
             else if(replData[index][(ways/2) + (way/2)]==1 && way%2==1) {
                 replData[index][ (ways/2) + (way/2)  ] = 0;
-                int i = ((ways/2) + (way/2) - (way%2))/2 + 1;
+                int i = ((ways/2) + (way/4))/2 + 1;
                 while (i > 0) {
                     if(replData[index][ i - 1 ] == 0) {
                         replData[index][(i-1)] = 1;

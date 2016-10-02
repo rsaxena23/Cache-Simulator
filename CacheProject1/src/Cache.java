@@ -69,8 +69,5 @@ public class Cache {
         return tags;
     }
 
-    public void updateEntry()
-    {
 
-    }
 }

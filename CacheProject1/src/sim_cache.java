@@ -36,7 +36,6 @@ public class sim_cache {
                 System.out.println("WriteBacks - "+(L2.log.writeBacks));
             }
 
-
             System.out.println("Memory traffic:"+memBlocks);
 
         }catch(IOException ie) {
@@ -77,6 +76,18 @@ public class sim_cache {
                     L2.tagArray[l2Index][l2Find].isDirty=true;
                 } */
                 L2.replace.updateIndex(l2Index,l2Find);
+                if(L2.inclusiveness == Constants.EXCLUSIVE)
+                {
+                    if(L2.tagArray[l2Index][l2Find].isDirty)
+                    {
+                        memBlocks++;
+                        L2.log.writeBacks++;
+                    }
+
+                    L2.tagArray[l2Index][l2Find].isDirty=false;
+                    L2.tagArray[l2Index][l2Find].completeAddress=null;
+                    L2.tagArray[l2Index][l2Find].loadedAddress=null;
+                }
             }
             else {
                 //if(operation=='r')
@@ -84,22 +95,45 @@ public class sim_cache {
                 //else
                   //  L2.log.writeMisses++;
 
-                int l2Way = L2.getFreeBlock(l2Index);
-                if(l2Way==Constants.NO)
-                    l2Way = L2.replace.getReplaceIndex(l2Index);
-                L2.replace.updateIndex(l2Index,l2Way);
-                if(L2.tagArray[l2Index][l2Way].isDirty) {
-                    L2.log.writeBacks++;
+                /* Since Don't have to load in L2 for exclusive */
+                if(L2.inclusiveness!=Constants.EXCLUSIVE) {
+                    int l2Way = L2.getFreeBlock(l2Index);
+                    if (l2Way == Constants.NO) {
+                        l2Way = L2.replace.getReplaceIndex(l2Index);
+                        if(L2.inclusiveness==Constants.INCLUSIVE) {
+                            String[] tempL1Tags = L1.translateAddressToTag(L2.tagArray[l2Index][l2Way].completeAddress);
+                            int tempL1Index = Integer.parseInt(tempL1Tags[0]);
+                            int tempL1Way = L1.findCacheEntry(tempL1Index, tempL1Tags[0]);
+                            if (tempL1Way!=Constants.NO)
+                            {
+                                if(L1.tagArray[tempL1Index][tempL1Way].isDirty)
+                                {
+                                    memBlocks++;
+                                    L1.log.writeBacks++;  // Check?
+                                    /* Reset the block */
+                                    L1.tagArray[tempL1Index][tempL1Way].isDirty=false;
+                                    L1.tagArray[tempL1Index][tempL1Way].completeAddress=null;
+                                    L1.tagArray[tempL1Index][tempL1Way].loadedAddress=null;
+                                }
+                            }
+                        }
+                    }
+                    else
+                        L2.replace.updateIndex(l2Index, l2Way);
+
+                    if (L2.tagArray[l2Index][l2Way].isDirty) {
+                        L2.log.writeBacks++;
+                        memBlocks++;
+                    }
+
+                    L2.tagArray[l2Index][l2Way].loadedAddress = l2Tags[0];
+                    L2.tagArray[l2Index][l2Way].completeAddress = address;
+                    if (operation == 'r')
+                        L2.tagArray[l2Index][l2Way].isDirty = false;
+                    else
+                        L2.tagArray[l2Index][l2Way].isDirty = true;
                     memBlocks++;
                 }
-
-                L2.tagArray[l2Index][l2Way].loadedAddress = l2Tags[0];
-                L2.tagArray[l2Index][l2Way].completeAddress = address;
-                if(operation=='r')
-                    L2.tagArray[l2Index][l2Way].isDirty = false;
-                else
-                    L2.tagArray[l2Index][l2Way].isDirty = true;
-                memBlocks++;
             }
         }
 
@@ -114,15 +148,35 @@ public class sim_cache {
             memBlocks++;
 
         int l1Way = L1.getFreeBlock(l1Index);
-        if(l1Way== Constants.NO)
+        if(l1Way == Constants.NO) {
             l1Way = L1.replace.getReplaceIndex(l1Index);
+            if(L2.inclusiveness==Constants.EXCLUSIVE &&  !L1.tagArray[l1Index][l1Way].isDirty)
+            {
+                String[] tempL2Tags = L2.translateAddressToTag(L1.tagArray[l1Index][l1Way].completeAddress);
+                int tempL2Index = Integer.parseInt(tempL2Tags[1]);
+                int tempL2Way = L2.getFreeBlock(tempL2Index);
+                if(tempL2Way==Constants.NO)
+                {
+                    tempL2Way = L2.replace.getReplaceIndex(tempL2Index);
+                    if(L2.tagArray[tempL2Index][tempL2Way].isDirty) {
+                        memBlocks++;
+                        L2.log.writeBacks++;
+                    }
+                }
+                L2.tagArray[tempL2Index][tempL2Way].completeAddress = address;
+                L2.tagArray[tempL2Index][tempL2Way].loadedAddress = tempL2Tags[0];
+                L2.tagArray[tempL2Index][tempL2Way].isDirty=true;
+                L2.log.writeMisses++;
 
-        L1.replace.updateIndex(l1Index,l1Way);
+            }
+        }
+        else
+            L1.replace.updateIndex(l1Index,l1Way);
 
         if(L1.tagArray[l1Index][l1Way].isDirty) {
-            //memBlocks++;  Check Why?
+
             L1.log.writeBacks++;
-            if(L2!=null && L2.inclusiveness!=Constants.EXCLUSIVE)
+            if(L2!=null)
             {
                 String[] tempL2Tags = L2.translateAddressToTag(L1.tagArray[l1Index][l1Way].completeAddress);
                 int tempL2Index = Integer.parseInt(tempL2Tags[1]);
@@ -131,14 +185,60 @@ public class sim_cache {
                 {
                         L2.log.writeHits++;
                         L2.tagArray[tempL2Index][tempL2Find].isDirty=true;
+                    if(L2.inclusiveness == Constants.EXCLUSIVE)
+                    {
+                        if(L2.tagArray[tempL2Index][tempL2Find].isDirty)
+                        {
+                            memBlocks++;
+                            L2.log.writeBacks++;
+                        }
+                        L2.tagArray[tempL2Index][tempL2Find].isDirty=false;
+                        L2.tagArray[tempL2Index][tempL2Find].completeAddress=null;
+                        L2.tagArray[tempL2Index][tempL2Find].loadedAddress=null;
+                    }
                 }
                 else
                 {
+                    int tempL2Way = L2.getFreeBlock(tempL2Index);
+                    if(tempL2Way==Constants.NO) {
+                        tempL2Way = L2.replace.getReplaceIndex(tempL2Index);
+                        if(L2.inclusiveness==Constants.INCLUSIVE) {
+                            String[] tempL1Tags = L1.translateAddressToTag(L2.tagArray[tempL2Index][tempL2Way].completeAddress);
+                            int tempL1Index = Integer.parseInt(tempL1Tags[0]);
+                            int tempL1Way = L1.findCacheEntry(tempL1Index, tempL1Tags[0]);
+                            if (tempL1Way!=Constants.NO)
+                            {
+                                if(L1.tagArray[tempL1Index][tempL1Way].isDirty)
+                                {
+                                    memBlocks++;
+                                    L1.log.writeBacks++;  // Check?
+                                    /* Reset the block */
+                                    L1.tagArray[tempL1Index][tempL1Way].isDirty=false;
+                                    L1.tagArray[tempL1Index][tempL1Way].completeAddress=null;
+                                    L1.tagArray[tempL1Index][tempL1Way].loadedAddress=null;
+                                }
+                            }
+                        }
+                    }
+                    else
+                        L2.replace.updateIndex(tempL2Index,tempL2Way);
+
+                    if(L2.tagArray[tempL2Index][tempL2Way].isDirty) {
+                        //L2.log.writeBacks++;
+                        memBlocks++;
+                    }
+                    //int tempL2Way = L2.replace.getReplaceIndex(tempL2Index);
+                    //L2.replace.updateIndex(tempL2Index,tempL2Way);
                     L2.log.writeMisses++;
+                    L2.tagArray[tempL2Index][tempL2Way].isDirty=true;
+                    L2.tagArray[tempL2Index][tempL2Way].loadedAddress = tempL2Tags[0];
+                    L2.tagArray[tempL2Index][tempL2Way].completeAddress = L1.tagArray[l1Index][l1Way].completeAddress;
                     L2.log.writeBacks++;
-                    memBlocks++;
+                    //memBlocks++;
                 }
             }
+            else
+                memBlocks++;
         }
 
         L1.tagArray[l1Index][l1Way].loadedAddress = l1Tags[0];
