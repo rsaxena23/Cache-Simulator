@@ -25,12 +25,17 @@ public class sim_cache {
 
             /* Stats check */
             System.out.println("L1:");
-            System.out.println("Reads- Hits:"+(L1.log.readHits+L1.log.readMisses)+" Misses:"+L1.log.readMisses);
-            System.out.println("Writes- Hits:"+(L1.log.writeHits+L1.log.writeMisses)+" Misses:"+L1.log.writeMisses);
+            System.out.println("Reads- "+(L1.log.readHits+L1.log.readMisses)+" Misses:"+L1.log.readMisses);
+            System.out.println("Writes- "+(L1.log.writeHits+L1.log.writeMisses)+" Misses:"+L1.log.writeMisses);
+            System.out.println("WriteBacks - "+(L1.log.writeBacks));
 
             System.out.println("L2:");
-            System.out.println("Reads- Hits:"+(L2.log.readHits+L2.log.readMisses)+" Misses:"+L2.log.readMisses);
-            System.out.println("Writes- Hits:"+(L2.log.writeHits+L2.log.writeMisses)+" Misses:"+L2.log.writeMisses);
+            if(L2!=null) {
+                System.out.println("Reads- " + (L2.log.readHits + L2.log.readMisses) + " Misses:" + L2.log.readMisses);
+                System.out.println("Writes- " + (L2.log.writeHits + L2.log.writeMisses) + " Misses:" + L2.log.writeMisses);
+                System.out.println("WriteBacks - "+(L2.log.writeBacks));
+            }
+
 
             System.out.println("Memory traffic:"+memBlocks);
 
@@ -83,8 +88,10 @@ public class sim_cache {
                 if(l2Way==Constants.NO)
                     l2Way = L2.replace.getReplaceIndex(l2Index);
                 L2.replace.updateIndex(l2Index,l2Way);
-                if(L2.tagArray[l2Index][l2Way].isDirty)
+                if(L2.tagArray[l2Index][l2Way].isDirty) {
+                    L2.log.writeBacks++;
                     memBlocks++;
+                }
 
                 L2.tagArray[l2Index][l2Way].loadedAddress = l2Tags[0];
                 L2.tagArray[l2Index][l2Way].completeAddress = address;
@@ -113,7 +120,8 @@ public class sim_cache {
         L1.replace.updateIndex(l1Index,l1Way);
 
         if(L1.tagArray[l1Index][l1Way].isDirty) {
-            memBlocks++;
+            //memBlocks++;  Check Why?
+            L1.log.writeBacks++;
             if(L2!=null && L2.inclusiveness!=Constants.EXCLUSIVE)
             {
                 String[] tempL2Tags = L2.translateAddressToTag(L1.tagArray[l1Index][l1Way].completeAddress);
@@ -123,6 +131,12 @@ public class sim_cache {
                 {
                         L2.log.writeHits++;
                         L2.tagArray[tempL2Index][tempL2Find].isDirty=true;
+                }
+                else
+                {
+                    L2.log.writeMisses++;
+                    L2.log.writeBacks++;
+                    memBlocks++;
                 }
             }
         }

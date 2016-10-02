@@ -8,4 +8,5 @@ public class Metrics {
     int writes=0;
     int writeHits=0;
     int writeMisses=0;
+    int writeBacks=0;
 }
