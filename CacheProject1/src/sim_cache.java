@@ -1,7 +1,3 @@
-import com.sun.org.apache.xalan.internal.xsltc.compiler.Pattern;
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.ContentModelContainer;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -33,8 +29,8 @@ public class sim_cache {
             System.out.println("Writes- Hits:"+(L1.log.writeHits+L1.log.writeMisses)+" Misses:"+L1.log.writeMisses);
 
             System.out.println("L2:");
-            //System.out.println("Reads- Hits:"+L2.log.readHits+" Misses:"+L2.log.readMisses);
-            //System.out.println("Writes- Hits:"+L2.log.writeHits+" Misses:"+L2.log.writeMisses);
+            System.out.println("Reads- Hits:"+(L2.log.readHits+L2.log.readMisses)+" Misses:"+L2.log.readMisses);
+            System.out.println("Writes- Hits:"+(L2.log.writeHits+L2.log.writeMisses)+" Misses:"+L2.log.writeMisses);
 
             System.out.println("Memory traffic:"+memBlocks);
 
@@ -69,25 +65,25 @@ public class sim_cache {
 
             if (l2Find!=Constants.NO)
             {
-                if(operation=='r')
+                //if(operation=='r')
                     L2.log.readHits++;
-                else {
+                /*else {
                     L2.log.writeHits++;
-                    L2.tagArray[l1Index][l1Find].isDirty=true;
-                }
+                    L2.tagArray[l2Index][l2Find].isDirty=true;
+                } */
                 L2.replace.updateIndex(l2Index,l2Find);
             }
             else {
-                if(operation=='r')
+                //if(operation=='r')
                     L2.log.readMisses++;
-                else
-                    L2.log.writeMisses++;
+                //else
+                  //  L2.log.writeMisses++;
 
                 int l2Way = L2.getFreeBlock(l2Index);
                 if(l2Way==Constants.NO)
                     l2Way = L2.replace.getReplaceIndex(l2Index);
                 L2.replace.updateIndex(l2Index,l2Way);
-                if(L2.tagArray[l1Index][l2Way].isDirty)
+                if(L2.tagArray[l2Index][l2Way].isDirty)
                     memBlocks++;
 
                 L2.tagArray[l2Index][l2Way].loadedAddress = l2Tags[0];
@@ -98,7 +94,6 @@ public class sim_cache {
                     L2.tagArray[l2Index][l2Way].isDirty = true;
                 memBlocks++;
             }
-
         }
 
         /* L1 Miss */
@@ -125,7 +120,10 @@ public class sim_cache {
                 int tempL2Index = Integer.parseInt(tempL2Tags[1]);
                 int tempL2Find = L2.findCacheEntry(tempL2Index , tempL2Tags[0] );
                 if(tempL2Find!=Constants.NO)
-                    L2.tagArray[tempL2Index][tempL2Find].isDirty= false;
+                {
+                        L2.log.writeHits++;
+                        L2.tagArray[tempL2Index][tempL2Find].isDirty=true;
+                }
             }
         }
 
