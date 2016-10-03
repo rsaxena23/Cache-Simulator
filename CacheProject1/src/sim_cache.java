@@ -24,19 +24,48 @@ public class sim_cache {
             }
 
             /* Stats check */
-            System.out.println("L1:");
-            System.out.println("Reads- "+(L1.log.readHits+L1.log.readMisses)+" Misses:"+L1.log.readMisses);
-            System.out.println("Writes- "+(L1.log.writeHits+L1.log.writeMisses)+" Misses:"+L1.log.writeMisses);
-            System.out.println("WriteBacks - "+(L1.log.writeBacks));
+            System.out.println("===== Simulation results (raw) =====");
+            System.out.println("a. number of L1 reads:        "+(L1.log.readHits+L1.log.readMisses));
+            System.out.println("b. number of L1 read misses:  "+(L1.log.readMisses));
+            System.out.println("c. number of L1 writes:       "+(L1.log.writeHits+L1.log.writeMisses));
+            System.out.println("d. number of L1 write misses: "+(L1.log.writeMisses));
 
-            System.out.println("L2:");
+            double l1MissRate = (double)( L1.log.readMisses + L1.log.writeMisses  ) /(double) (L1.log.readHits+L1.log.readMisses+L1.log.writeHits+L1.log.writeMisses );
+
+            System.out.println("e. L1 Miss rate:              "+l1MissRate);
+            System.out.println("f. number of L1 writebacks:   "+(L1.log.writeBacks));
+
+          /*  System.out.println("Reads- "+(L1.log.readHits+L1.log.readMisses)+" Misses:"+L1.log.readMisses);
+            System.out.println("Writes- "+(L1.log.writeHits+L1.log.writeMisses)+" Misses:"+L1.log.writeMisses);
+            System.out.println("WriteBacks - "+(L1.log.writeBacks)); */
             if(L2!=null) {
-                System.out.println("Reads- " + (L2.log.readHits + L2.log.readMisses) + " Misses:" + L2.log.readMisses);
+
+                System.out.println("g. number of L2 reads:        "+(L2.log.readHits+L2.log.readMisses));
+                System.out.println("h. number of L2 read misses:  "+(L2.log.readMisses));
+                System.out.println("i. number of L2 writes:       "+(L2.log.writeHits+L2.log.writeMisses));
+                System.out.println("j. number of L2 write misses: "+(L2.log.writeMisses));
+
+                double l2MissRate = (double)( L2.log.readMisses + L2.log.writeMisses  ) /(double) (L2.log.readHits+L2.log.readMisses+L2.log.writeHits+L2.log.writeMisses );
+
+                System.out.println("k. L2 Miss rate:              "+l2MissRate);
+                System.out.println("l. number of L2 writebacks:   "+(L2.log.writeBacks));
+
+                /*System.out.println("Reads- " + (L2.log.readHits + L2.log.readMisses) + " Misses:" + L2.log.readMisses);
                 System.out.println("Writes- " + (L2.log.writeHits + L2.log.writeMisses) + " Misses:" + L2.log.writeMisses);
-                System.out.println("WriteBacks - "+(L2.log.writeBacks));
+                System.out.println("WriteBacks - "+(L2.log.writeBacks));*/
+            }
+            else
+            {
+                int zero=0;
+                System.out.println("g. number of L2 reads:        "+(zero));
+                System.out.println("h. number of L2 read misses:  "+(zero));
+                System.out.println("i. number of L2 writes:       "+(zero));
+                System.out.println("j. number of L2 write misses: "+(zero));
+                System.out.println("k. L2 Miss rate:              "+(float)zero);
+                System.out.println("l. number of L2 writebacks:   "+(zero));
             }
 
-            System.out.println("Memory traffic:"+memBlocks);
+            System.out.println("m. total memory traffic:      "+memBlocks);
 
         }catch(IOException ie) {
             System.out.println("Exception:"+ ie.getMessage());
@@ -275,6 +304,46 @@ public class sim_cache {
             L2 = new Cache(blocksize, l2Size, l2Assoc, replacementPolicy);
             L2.inclusiveness = l2InclusionPolicy;
         }
+
+        /* Print config*/
+        System.out.println("===== Simulator configuration =====");
+        System.out.println("BLOCKSIZE:             "+blocksize+"");
+        System.out.println("L1_SIZE:               "+l1Size);
+        System.out.println("L1_ASSOC:              "+l1Assoc);
+        System.out.println("L2_SIZE:               "+l2Size);
+        System.out.println("L2_ASSOC:              "+l2Assoc);
+        String replaceStr="",inclusionStr="";
+        switch(replacementPolicy){
+            case 0:
+                replaceStr="LRU";
+                break;
+            case 1:
+                replaceStr="FIFO";
+                break;
+            case 2:
+                replaceStr="PSEUDO";
+                break;
+            case 3:
+                replaceStr="OPTIMAL";
+                break;
+        }
+        switch(l2InclusionPolicy){
+            case 0:
+                inclusionStr="non inclusive";
+                break;
+            case 1:
+                inclusionStr="inclusive";
+                break;
+            case 2:
+                inclusionStr="exclusive";
+                break;
+        }
+        System.out.println("REPLACEMENT POLICY:    "+replaceStr);
+        System.out.println("INCLUSION PROPERTY:    "+inclusionStr);
+        System.out.println("trace_file:            "+traceFile);
+
+
+
 
         new sim_cache().startSimulate(traceFile);
     }
