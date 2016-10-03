@@ -342,6 +342,12 @@ public class sim_cache {
         System.out.println("INCLUSION PROPERTY:    "+inclusionStr);
         System.out.println("trace_file:            "+traceFile);
 
+        if(replacementPolicy==Constants.OPTIMAL)
+        {
+            System.out.println("Have not implemented OPTIMAL replacement Policy");
+            System.exit(0);
+        }
+
 
 
 
